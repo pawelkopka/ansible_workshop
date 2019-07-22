@@ -1,0 +1,5 @@
+---
+dependencies:
+- role: meta_role
+  vars:
+    meta_data: meta data 1

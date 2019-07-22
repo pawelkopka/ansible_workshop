@@ -1,0 +1,4 @@
+---
+- name: show meta data
+  debug:
+    msg: "{{ meta_data }}"

@@ -1,0 +1,4 @@
+---
+- name: my handler
+  debug:
+    msg: YEP, something notified me that I need to run this handler

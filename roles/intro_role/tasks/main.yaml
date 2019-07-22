@@ -1,0 +1,44 @@
+---
+- name: start intro role
+  debug:
+    msg: start intro role
+- name: name server 1
+  debug:
+    msg: "{{ server_1 }}"
+- name: name server 2
+  debug:
+    msg: "{{ server_2 }}"
+
+- name: copy static config
+  file:
+    path: /etc/ansible_workshop
+    owner: root
+    group: root
+    mode: "644"
+    state: directory
+
+- name: copy static config
+  copy:
+    src: static_config.yaml
+    dest: /etc/ansible_workshop/static_config.yaml
+
+- name: show static config
+  shell: "cat /etc/ansible_workshop/static_config.yaml"
+
+- name: crate static config
+  template:
+    src: config.yaml.j2
+    dest: /etc/ansible_workshop/config.yaml
+
+- name: show config
+  shell: "cat /etc/ansible_workshop/config.yaml"
+
+- name: task with handler
+  shell: "echo 'hey handler'"
+  register: output
+  notify:
+    - my handler
+
+- name: show output
+  debug:
+    msg: "{{ output }}"

@@ -1,0 +1,31 @@
+ - hosts: all
+   become: yes
+   tasks:
+    - name:
+      debug:
+       msg: '{{ ansible_distribution }}'
+    - name: install tcpdump apt
+      apt:
+        name: tcpdump
+        state: present
+      when: "ansible_distribution == 'Ubuntu' or ansible_distribution == 'Debian'"
+    - name: install tcpdump yum
+      yum:
+        name: tcpdump
+        state: present
+      when: "ansible_distribution == 'CentOS'"
+    - name: install tcpdump package
+      package:
+        name: tcpdump
+        state: present
+
+    - name: set facts
+      set_fact:
+        new_var:
+          - one
+          - two
+          - tree
+    - name: show new_var
+      debug:
+        msg: '{{ item }}'
+      with_items: "{{ new_var }}"
