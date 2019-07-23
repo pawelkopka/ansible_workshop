@@ -51,6 +51,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   ssh_pub_key = File.readlines("#{Dir.home}/.ssh/id_rsa.pub").first.strip
   config.vm.provision 'shell', inline: 'mkdir -p /root/.ssh'
-  config.vm.provision 'shell', inline: "echo #{ssh_pub_key} >> /root/.ssh/authorized_keys"
-  config.vm.provision 'shell', inline: "echo #{ssh_pub_key} >> /home/vagrant/.ssh/authorized_keys", privileged: false
+  config.vm.provision 'shell', inline: "echo '#{ssh_pub_key}' >> /root/.ssh/authorized_keys"
+  config.vm.provision 'shell', inline: "echo '#{ssh_pub_key}' >> /home/vagrant/.ssh/authorized_keys", privileged: false
 end
