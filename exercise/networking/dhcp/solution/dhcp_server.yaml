@@ -1,0 +1,73 @@
+---
+- hosts: ubuntu
+  become: yes
+  tasks:
+    - name: install dhcp server on ubuntu
+      apt:
+        name: isc-dhcp-server
+        state: present
+
+    - name: change default-lease-time
+      lineinfile:
+        path: /etc/dhcp/dhcpd.conf
+        regexp: '^default-lease-time .*'
+        line: default-lease-time 3607;
+        state: present
+
+    - name: change max-lease-time
+      lineinfile:
+        path: /etc/dhcp/dhcpd.conf
+        regexp: '^max-lease-time .*'
+        line: max-lease-time 7207;
+        state: present
+
+    - name: add interface to /etc/default/isc-dhcp-server
+      lineinfile:
+        path: /etc/default/isc-dhcp-server
+        regexp: '^INTERFACES.*'
+        line: INTERFACES="eth2"
+        state: present
+
+    - name: add subnet to dhcpd config
+      blockinfile:
+        block: |
+          subnet 172.16.7.0 netmask 255.255.255.0 {
+            range 172.16.7.7 172.16.7.77;
+            option domain-name-servers ansible-workshop;
+            option domain-name "ansible-workshop.gg";
+            option subnet-mask 255.255.255.0;
+            option broadcast-address 172.16.7.77;}
+        dest: /etc/dhcp/dhcpd.conf
+        state: present
+
+    - name: up interface eth2
+      shell: ifconfig eth2 up
+
+    - name: add ip address to eth2 #TODO fix it
+      shell: ip addr add 172.16.7.1/24 dev eth2
+      register: output
+      when: "ansible_eth2.ipv4.address is not defined"
+
+    - name: start service isc-dhcp-server
+      systemd:
+        name: isc-dhcp-server
+        state: started
+
+- hosts: all:!ubuntu
+  become: yes
+  tasks:
+    - name: up interface eth2
+      shell: ifconfig eth2 up
+      when: "'CentOS' != ansible_distribution"
+
+    - name: run dhclient
+      shell: "dhclient eth2"
+      when: "ansible_eth2.ipv4.address is not defined"
+
+    - name: show ip
+      shell: ip a
+      register: output
+
+    - name: show ip
+      debug:
+        msg: "{{ output }}"

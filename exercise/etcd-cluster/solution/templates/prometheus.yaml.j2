@@ -1,0 +1,6 @@
+global:
+  scrape_interval: 10s
+scrape_configs:
+  - job_name: test-etcd
+    static_configs:
+    - targets: ['{{ hostvars['ubuntu']['ansible_host'] }}:2379','{{ hostvars['centos']['ansible_host'] }}:2379','{{ hostvars['debian']['ansible_host'] }}:2379']

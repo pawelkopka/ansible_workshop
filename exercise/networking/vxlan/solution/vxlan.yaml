@@ -1,0 +1,15 @@
+---
+- hosts: all
+  become: yes
+  tasks:
+    - name: add vxlan link to eth1
+      shell: ip link add vxlan7 type vxlan id 7 group 239.1.1.1 dstport 4789 dev eth1
+      when: ansible_vxlan7 is not defined
+
+    - name: ste link up vxlan7
+      shell: ip link set vxlan7 up
+
+    - name: add ip address
+      shell: "ip addr add 172.16.16.{{ansible_eth1.ipv4.address.split('.')[-1]}}/24 dev vxlan7"
+      when: ansible_vxlan7.ipv4.address is not defined
+

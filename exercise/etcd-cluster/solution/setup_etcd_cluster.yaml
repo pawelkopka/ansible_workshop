@@ -1,0 +1,64 @@
+---
+- hosts: all
+  become: yes
+  tasks:
+    - name: download etcd
+      get_url:
+        url: "https://github.com/coreos/etcd/releases/download/v3.3.9/etcd-v3.3.9-linux-amd64.tar.gz"
+        dest: "/usr/local/src"
+        mode: 0644
+    - name: unarchive etcd
+      unarchive:
+        remote_src: True
+        src: "/usr/local/src/etcd-v3.3.9-linux-amd64.tar.gz"
+        dest: "/usr/local/src/"
+
+    - name: copy etcd to bin
+      copy:
+        remote_src: True
+        src: "/usr/local/src/etcd-v3.3.9-linux-amd64/{{item}}"
+        dest: "/usr/local/bin/"
+        mode: '+x'
+      with_items:
+        - etcd
+        - etcdctl
+
+    - name: add group etcd
+      group:
+        name: etcd
+        state: present
+        gid: 1501
+
+    - name: add user etcd
+      user:
+        name: etcd
+        comment: etcd user
+        uid: 1501
+        group: etcd
+
+    - name: create dir /etc/etcd
+      file:
+        path: /etc/etcd
+        state: directory
+        owner: etcd
+        group: etcd
+
+    - name: create dir /var/lib/etcd
+      file:
+        path: /var/lib/etcd
+        state: directory
+        owner: etcd
+        group: etcd
+
+    - name: create dir /var/lib/etcd
+      template:
+        src: etcd.service.j2
+        dest: /lib/systemd/system/etcd.service
+
+    - name: start service etcd
+      systemd:
+        name: etcd
+        state: restarted
+        enabled: yes
+        daemon_reload: yes
+        force: yes

@@ -1,0 +1,71 @@
+---
+- hosts: ubuntu
+  become: yes
+  tasks:
+    - name: download prometheus
+      get_url:
+        url: "https://github.com/prometheus/prometheus/releases/download/v2.2.1/prometheus-2.2.1.linux-amd64.tar.gz"
+        dest: "/usr/local/src"
+        mode: 0644
+    - name: unarchive prometheus
+      unarchive:
+        remote_src: True
+        src: "/usr/local/src/prometheus-2.2.1.linux-amd64.tar.gz"
+        dest: "/usr/local/src/"
+
+    - name: copy prometheus to bin
+      copy:
+        remote_src: True
+        src: "/usr/local/src/prometheus-2.2.1.linux-amd64/{{item}}"
+        dest: "/usr/local/bin/"
+        mode: '+x'
+      with_items:
+        - prometheus
+        - promtool
+    - name: copy consoles to /etc/prometheus
+      copy:
+        remote_src: True
+        src: "/usr/local/src/prometheus-2.2.1.linux-amd64/{{item}}"
+        dest: "/etc/prometheus"
+        mode: '+x'
+      with_items:
+        - consoles
+        - console_libraries
+
+    - name: add group prometheus
+      group:
+        name: prometheus
+        state: present
+        gid: 1502
+
+    - name: add user prometheus
+      user:
+        name: prometheus
+        comment: prometheus user
+        uid: 1502
+        group: prometheus
+
+    - name: create /var/lib/prometheus/
+      file:
+        path: "/var/lib/prometheus/"
+        owner: prometheus
+        group: prometheus
+        state: directory
+
+    - name: create dir /var/lib/prometheus
+      template:
+        src: prometheus.service.j2
+        dest: /lib/systemd/system/prometheus.service
+
+    - name: create config prometheus
+      template:
+        src: prometheus.yaml.j2
+        dest: /etc/prometheus/prometheus.yml
+
+    - name: start service prometheus
+      systemd:
+        name: prometheus
+        state: restarted
+        enabled: yes
+        daemon_reload: yes
+        force: yes
