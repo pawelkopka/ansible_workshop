@@ -1,0 +1,29 @@
+---
+- hosts: all
+  become: yes
+  tasks:
+    - name: check inteface vxlan7
+      fail:
+        msg: "no interface vxlan7"
+      when: "ansible_vxlan7 is not defined"
+
+    - name: check ip address on vxlan7
+      fail:
+        msg: "no address ip on vxlan7"
+      when: "ansible_vxlan7.ipv4.address is not defined and ansible_vxlan7.ipv4.address | ipaddr "
+
+    - name: check ip last octa vxlan7 == eth1
+      fail:
+        msg: "last octa is diffrent "
+      when: "ansible_eth1.ipv4.address.split('.')[-1] != ansible_vxlan7.ipv4.address.split('.')[-1] "
+
+    - name: ping
+      shell: "ping {{ hostvars[item]['ansible_vxlan7']['ipv4']['address'] }} -c 1"
+      register: output
+      with_inventory_hostnames:
+        - all
+
+    - name: show ping
+      debug:
+        msg: "{{ item['stdout']}}"
+      with_items: "{{ output.results }}"

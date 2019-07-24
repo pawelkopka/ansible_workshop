@@ -1,0 +1,13 @@
+---
+- hosts: ubuntu
+  become: yes
+  tasks:
+    - name: install jq
+      apt:
+        name: jq
+        state: present
+
+    - name: check prometheus
+      shell: 'curl "localhost:9090/api/v1/targets" | jq "." | grep "\"health\": \"up\"" | wc '
+      register: output
+      failed_when: 'output.stdout.split()[0] != "3"'

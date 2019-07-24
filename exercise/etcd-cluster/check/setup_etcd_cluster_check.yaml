@@ -1,0 +1,12 @@
+---
+- hosts: all
+  become: yes
+  tasks:
+    - name: check cluster is healthy
+      shell: "etcdctl --endpoints http://127.0.0.1:2379 cluster-health | grep '{{ item }}'"
+      register: output
+      failed_when: "output.rc != 0"
+      with_items:
+        - 'http://192.168.50.31:2379'
+        - 'http://192.168.50.21:2379'
+        - 'http://192.168.50.11:2379'

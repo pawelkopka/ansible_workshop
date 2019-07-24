@@ -1,0 +1,51 @@
+---
+- hosts: ubuntu
+  become: yes
+  tasks:
+    - name: check dhcpd config default-lease-time
+      shell: "cat /etc/dhcp/dhcpd.conf | grep 'default-lease-time 3607'"
+      register: result
+      failed_when:
+        -  result.rc != 0
+
+    - name: check dhcpd config max-lease-time
+      shell: "cat /etc/dhcp/dhcpd.conf | grep 'max-lease-time 7207'"
+      register: result
+      failed_when:
+        -  result.rc != 0
+
+    - name: check dhcpd config for subnet
+      shell: "cat /etc/dhcp/dhcpd.conf | grep '{{ item }}'"
+      register: result
+      with_items:
+        - subnet 172.16.7.0 netmask 255.255.255.0 {
+        - range 172.16.7.7 172.16.7.77;
+        - option domain-name-servers ansible-workshop;
+        - option domain-name "ansible-workshop.gg";
+        - option subnet-mask 255.255.255.0;
+        - option broadcast-address 172.16.7.77;}
+      failed_when:
+        -  result.rc != 0
+
+    - name: check dhcpd config isc-dhcp-server INTERFACES
+      shell: cat /etc/default/isc-dhcp-server | grep 'INTERFACES="eth2"'
+      register: result
+      failed_when:
+        -  result.rc != 0
+
+    - name: check service isc-dhcp-server
+      systemd:
+        name: isc-dhcp-server
+        state: started
+      register: result
+      failed_when:
+        -  result.changed
+
+
+- hosts: all
+  become: yes
+  tasks:
+    - name: check ip address on eth2
+      fail:
+        msg: "no address ip on eth2"
+      when: "ansible_eth2.ipv4.address is not defined and ansible_eth2.ipv4.address | ipaddr "
